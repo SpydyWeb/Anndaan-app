@@ -1,0 +1,43 @@
+{
+	email {$ACME_EMAIL}
+}
+
+(common) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+	log {
+		output stdout
+		format console
+	}
+}
+
+# Mobile app API
+{$API_DOMAIN} {
+	import common
+	request_body {
+		max_size 6MB
+	}
+	reverse_proxy api:8000
+}
+
+# Admin dashboard: static files, with the API on the same origin (no CORS needed)
+{$ADMIN_DOMAIN} {
+	import common
+	header Content-Security-Policy "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; frame-ancestors 'none'"
+	handle /api/* {
+		request_body {
+			max_size 6MB
+		}
+		reverse_proxy api:8000
+	}
+	handle {
+		root * /srv/admin
+		try_files {path} /index.html
+		file_server
+	}
+}

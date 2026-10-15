@@ -1,0 +1,14 @@
+.env
+*.env.local
+.tools/
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+backend/data/
+admin/dist/
+mobile/.expo/
+mobile/dist/
+mobile/ios/
+mobile/android/
+.DS_Store

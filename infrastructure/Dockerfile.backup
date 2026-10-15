@@ -1,0 +1,6 @@
+FROM postgis/postgis:17-3.5-alpine
+RUN apk add --no-cache rclone tzdata
+COPY infrastructure/backup.sh /backup.sh
+COPY infrastructure/restore.sh /restore.sh
+RUN chmod +x /backup.sh /restore.sh
+ENTRYPOINT ["/backup.sh"]
