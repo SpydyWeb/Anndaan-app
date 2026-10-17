@@ -1,0 +1,46 @@
+# Free demo deployment on Render (render.com): Dashboard > New > Blueprint > pick this repo.
+# The database lives on Neon (free, has PostGIS); paste its connection string when asked.
+# This is a demo/staging setup: SMS codes are shown on screen instead of being sent.
+services:
+  - type: web
+    name: anndaan-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # paste the Neon connection string (direct, not pooled)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENVIRONMENT
+        value: staging
+      - key: OTP_DEV_MODE
+        value: "true"
+      - key: SMS_PROVIDER
+        value: console
+      - key: WEB_CONCURRENCY
+        value: "1" # free plan has 512 MB
+      - key: TRUST_PROXY_HEADERS
+        value: "true"
+      - key: UPLOAD_DIR
+        value: /data/uploads # not persistent on the free plan; photos may vanish on restart
+      - key: RATE_LIMIT_PER_MINUTE
+        value: "300"
+      - key: CORS_ORIGINS
+        value: https://anndaan-admin.onrender.com
+
+  - type: web
+    name: anndaan-admin
+    runtime: static
+    buildCommand: cd admin && npm ci && npm run build
+    staticPublishPath: ./admin/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://anndaan-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

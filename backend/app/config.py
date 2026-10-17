@@ -50,6 +50,29 @@ class Settings(BaseSettings):
     rate_limit_per_minute: int = 120
     trust_proxy_headers: bool = False
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _asyncpg_url(cls, v):
+        """Accept the plain URLs hosts hand out (Neon, Render, Heroku-style) and adapt them:
+        postgres://...?sslmode=require  ->  postgresql+asyncpg://...?ssl=require"""
+        if not isinstance(v, str):
+            return v
+        from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+        parts = urlsplit(v)
+        scheme = parts.scheme
+        if scheme in ("postgres", "postgresql"):
+            scheme = "postgresql+asyncpg"
+        params = []
+        for key, value in parse_qsl(parts.query):
+            if key == "sslmode":
+                params.append(("ssl", value))
+            elif key == "channel_binding":  # libpq-only option asyncpg does not understand
+                continue
+            else:
+                params.append((key, value))
+        return urlunsplit((scheme, parts.netloc, parts.path, urlencode(params), parts.fragment))
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split(cls, v):
