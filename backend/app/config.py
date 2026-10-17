@@ -19,6 +19,9 @@ class Settings(BaseSettings):
 
     # OTP / SMS
     otp_dev_mode: bool = True  # returns the code in the API response; never enable in production
+    # Numbers that become admins when they sign in, e.g. "9911320092,9811042345". Lets you create
+    # the first admin from the hosting dashboard instead of a command line.
+    admin_phones: Annotated[list[str], NoDecode] = []
     otp_length: int = 6
     otp_ttl_seconds: int = 300
     otp_max_attempts: int = 5
@@ -72,6 +75,15 @@ class Settings(BaseSettings):
             else:
                 params.append((key, value))
         return urlunsplit((scheme, parts.netloc, parts.path, urlencode(params), parts.fragment))
+
+    @field_validator("admin_phones", mode="before")
+    @classmethod
+    def _phones(cls, v):
+        from .schemas import normalize_phone
+
+        if isinstance(v, str):
+            v = [p for p in v.split(",") if p.strip()]
+        return [normalize_phone(p) for p in v]
 
     @field_validator("cors_origins", mode="before")
     @classmethod

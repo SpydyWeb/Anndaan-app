@@ -119,3 +119,23 @@ async def test_update_profile(client):
     assert r.json()["name"] == "Sunita Devi" and r.json()["language"] == "hi"
     r = await client.patch("/me", json={"language": "fr"}, headers=s["headers"])
     assert r.status_code == 422
+
+
+async def test_admin_phones_setting_promotes_on_sign_in(client, monkeypatch):
+    from app.config import get_settings
+
+    phone = new_phone()
+    monkeypatch.setattr(get_settings(), "admin_phones", [phone])
+    s = await login(client, "Owner", phone)
+    assert s["user"]["role"] == "admin"
+    assert (await client.get("/admin/stats", headers=s["headers"])).status_code == 200
+
+    other = await login(client, "Someone")
+    assert other["user"]["role"] == "member"
+
+
+def test_admin_phones_parsing(monkeypatch):
+    from app.config import Settings
+
+    monkeypatch.setenv("ADMIN_PHONES", "9911320092, +91 98110 42345")
+    assert Settings().admin_phones == ["+919911320092", "+919811042345"]

@@ -15,6 +15,8 @@ services:
         sync: false # paste the Neon connection string (direct, not pooled)
       - key: JWT_SECRET
         generateValue: true
+      - key: ADMIN_PHONES
+        sync: false # your mobile number(s), comma-separated; they become admin on sign-in
       - key: ENVIRONMENT
         value: staging
       - key: OTP_DEV_MODE

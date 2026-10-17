@@ -113,6 +113,9 @@ async def verify_otp(session: AsyncSession, data: S.OtpVerifyIn, ua: str | None,
             user.name = data.name
         user.phone_verified_at = user.phone_verified_at or now
     user.last_seen_at = now
+    if user.phone in s.admin_phones and user.role != "admin":
+        user.role = "admin"
+        audit(session, "user.promote_admin", "user", user.id, user.id, ip, via="ADMIN_PHONES")
     access, refresh, exp = await _issue(session, user, uuid.uuid4(), ua, ip)
     audit(session, "auth.login", "user", user.id, user.id, ip)
     await session.commit()
