@@ -134,6 +134,7 @@ function Login({ onDone }: { onDone: (u: TokenPair['user']) => void }) {
     try {
       const r = await api<{ phone: string; dev_code?: string | null }>('/auth/otp/request', { body: { phone } })
       setSent({ phone: r.phone, dev: r.dev_code })
+      if (r.dev_code) setCode(r.dev_code) // demo server: no SMS is sent, so fill the code in
     } catch (e) {
       setErr((e as Error).message)
     } finally {
@@ -168,7 +169,7 @@ function Login({ onDone }: { onDone: (u: TokenPair['user']) => void }) {
           <label>
             Code from SMS
             <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus required />
-            {sent.dev && <small className="muted">Development server code: {sent.dev}</small>}
+            {sent.dev && <small className="muted">Demo server: no SMS is sent. The code has been filled in for you.</small>}
           </label>
         )}
         {err && <p className="err">{err}</p>}

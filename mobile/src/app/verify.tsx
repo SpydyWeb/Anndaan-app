@@ -70,7 +70,7 @@ export default function Verify() {
       setPhone(r.phone);
       setDevCode(r.dev_code ?? null);
       setResendAt(Date.now() + r.resend_after_seconds * 1000);
-      setCode('');
+      setCode(r.dev_code ?? ''); // demo server: no SMS is sent, so fill the code in
       setStep('code');
     } catch (e) {
       if (e instanceof ApiError && e.code === 'validation_error') setErr(['Enter a valid 10-digit mobile number.', 'सही 10 अंकों का मोबाइल नंबर डालें।']);
@@ -151,7 +151,7 @@ export default function Verify() {
             <>
               <Lbl p={['Code sent by SMS', 'SMS से आया कोड']} />
               <CodeInput length={6} value={code} onChange={setCode} autoFocus />
-              {devCode && <T style={{ color: C.mut, fontSize: 12.5 }}>Development server code: {devCode}</T>}
+              {devCode && <T style={{ color: C.mut, fontSize: 12.5 }}>Demo server: no SMS is sent. The code ({devCode}) has been filled in for you.</T>}
               {wait > 0 ? (
                 <Bi en={`Didn’t get it? Resend in 0:${String(wait).padStart(2, '0')}`} hi={`नहीं मिला? 0:${String(wait).padStart(2, '0')} में दोबारा भेजें`} style={{ color: C.mut, fontSize: 13.5 }} />
               ) : (
